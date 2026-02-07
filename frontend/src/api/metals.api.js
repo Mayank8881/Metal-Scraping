@@ -4,7 +4,7 @@ import axios from "axios";
  * Backend Base URL
  * If your backend runs on port 5000:
  */
-const BASE_URL = "http://localhost:5000/api/metals";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 /**
  * Get all metals
