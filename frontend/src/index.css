@@ -88,6 +88,11 @@ input:focus {
   background: #94a3b8;
 }
 
+/* 3D Flip Card Animation */
+.perspective {
+  perspective: 1000px;
+}
+
 /* Tailwind CSS */
 @tailwind base;
 @tailwind components;

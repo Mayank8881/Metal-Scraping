@@ -1,6 +1,30 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
+// Cache for exchange rate to avoid multiple API calls
+let cachedExchangeRate = 90; // Default fallback rate
+let exchangeRateLastFetched = null;
+
+/**
+ * Fetch current USD to INR exchange rate
+ */
+async function fetchExchangeRate() {
+    try {
+        // Use a free exchange rate API
+        const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD', {
+            timeout: 5000,
+        });
+        const rate = response.data.rates.INR;
+        if (rate) {
+            cachedExchangeRate = rate;
+            exchangeRateLastFetched = new Date();
+            console.log(`📊 Exchange Rate Updated: 1 USD = ${rate} INR`);
+        }
+    } catch (error) {
+        console.log(`⚠️ Failed to fetch exchange rate: ${error.message}. Using cached rate: ${cachedExchangeRate}`);
+    }
+}
+
 /**
  * Kitco Scraper
  * ---------------------------
@@ -9,11 +33,13 @@ const cheerio = require("cheerio");
  *
  * OUTPUT FORMAT:
  * [
- *   { metal: "Gold", price: 2034.22, currency: "USD", unit: "oz", source: "Kitco" }
+ *   { metal: "Gold", priceUSD: 2034.22, priceINR: 168833.48, currency: "USD/INR", unit: "oz", source: "Kitco" }
  * ]
  */
 
 async function scrapeKitcoMetals() {
+    // Fetch exchange rate at the start
+    await fetchExchangeRate();
     const url = "https://www.kitco.com/price/precious-metals";
 
     try {
@@ -108,25 +134,37 @@ async function scrapeKitcoMetals() {
                 gold: "Gold",
                 silver: "Silver",
                 platinum: "Platinum",
-                palladium: "Palladium",
                 rhodium: "Rhodium",
+                palladium: "Palladium",
             };
 
             Object.entries(metalSymbols).forEach(([key, name]) => {
                 if (jsonData[key] && jsonData[key].results && jsonData[key].results.length > 0) {
                     const result = jsonData[key].results[0];
-                    const price = result.bid || result.ask || result.close;
+                    const priceUSDPerOz = result.bid || result.ask || result.close;
 
-                    if (price) {
+                    if (priceUSDPerOz) {
+                        // Conversion: 1 troy oz = 31.1035 grams
+                        const GRAMS_PER_OZ = 31.1035;
+
+                        // Calculate prices
+                        const priceUSDPerGram = parseFloat((priceUSDPerOz / GRAMS_PER_OZ).toFixed(2));
+                        const priceINRPerOz = parseFloat((priceUSDPerOz * cachedExchangeRate).toFixed(2));
+                        const priceINRPerGram = parseFloat((priceUSDPerGram * cachedExchangeRate).toFixed(2));
+
                         metals.push({
                             metal: name,
-                            price: parseFloat(price),
-                            currency: jsonData[key].currency || "USD",
-                            unit: "oz",
+                            priceUSD: priceUSDPerOz,
+                            priceUSDAltUnit: priceUSDPerGram,
+                            priceINR: priceINRPerOz,
+                            priceINRAltUnit: priceINRPerGram,
+                            currency: "USD/INR",
+                            unitUSD: "oz",
+                            unitINR: "gram",
                             source: "Kitco",
                             lastUpdated: new Date().toISOString(),
                         });
-                        console.log(`✅ Extracted ${name}: $${price}`);
+                        console.log(`✅ Extracted ${name}: $${priceUSDPerOz}/oz ($${priceUSDPerGram}/g) USD / ₹${priceINRPerOz}/oz (₹${priceINRPerGram}/g) INR`);
                     }
                 }
             });
