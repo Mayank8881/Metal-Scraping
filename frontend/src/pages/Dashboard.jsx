@@ -64,25 +64,36 @@ export default function Dashboard() {
     }, [search]);
 
     return (
-        <div className="min-h-screen w-full px-4 py-8 flex justify-center">
-            <div className="w-full max-w-5xl flex flex-col gap-6">
+        <div className="min-h-screen w-full px-4 py-8 flex justify-center bg-gradient-to-br from-slate-50 via-white to-slate-50">
+            <div className="w-full max-w-6xl flex flex-col gap-6">
                 <Header />
 
                 <SearchBar value={search} onChange={setSearch} />
 
                 {/* Status bar */}
-                <div className="w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex flex-col gap-1">
-                    <p className="text-sm text-slate-700">
-                        <span className="font-semibold">Backend Last Updated:</span>{" "}
-                        {lastUpdated ? new Date(lastUpdated).toLocaleString() : "Not yet"}
-                    </p>
-
-                    <p className="text-sm text-slate-700">
-                        <span className="font-semibold">Source Status:</span>{" "}
-                        {Object.keys(sourceStatus).length > 0
-                            ? JSON.stringify(sourceStatus)
-                            : "Unknown"}
-                    </p>
+                <div className="w-full rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-5 shadow-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-xs uppercase tracking-wide text-amber-700 font-semibold">Backend Last Updated</p>
+                            <p className="text-sm text-slate-900 mt-1 font-medium">
+                                {lastUpdated ? new Date(lastUpdated).toLocaleString() : "Waiting for first update..."}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs uppercase tracking-wide text-amber-700 font-semibold">Source Status</p>
+                            <div className="flex gap-2 mt-2 flex-wrap">
+                                {Object.entries(sourceStatus).map(([source, status]) => (
+                                    <span key={source} className={`text-xs font-semibold px-3 py-1 rounded-full ${status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                        }`}>
+                                        {source}: {status ? '✓ Active' : '✗ Inactive'}
+                                    </span>
+                                ))}
+                                {Object.keys(sourceStatus).length === 0 && (
+                                    <span className="text-xs text-slate-600 italic">No source status available</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {loading ? <Loading /> : <MetalsTable metals={metals} />}
