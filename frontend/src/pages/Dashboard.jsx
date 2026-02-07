@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchMetals } from "../api/metals.api";
 
 import Header from "../components/Header";
-import SearchBar from "../components/Searchbar";
+import SearchBar from "../components/SearchBar";
 import MetalsTable from "../components/MetalsTable";
 import Loading from "../components/Loading";
 
