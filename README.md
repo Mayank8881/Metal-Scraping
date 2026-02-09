@@ -298,12 +298,13 @@ Then open your browser and visit: `http://localhost:5173`
 
 ### Base URL
 ```
-http://localhost:5000/api
+http://localhost:5000/health
 ```
 
 ### 1. Get All Metals Data
 ```
 GET /api/metals
+-- http://localhost:5000/api/metals
 ```
 
 **Response:**
